@@ -18,6 +18,7 @@ import subprocess
 import json
 import argparse
 import cookielib
+import ConfigParser
 import os
 import urllib
 import math
@@ -34,9 +35,11 @@ parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
 args = parser.parse_args()
-api_key = "" # Hunter API key
-username = "" 	# enter username here
-password = ""	# enter password here
+config = ConfigParser.RawConfigParser()
+config.read('LinkedInt.cfg')
+api_key = config.get('API_KEYS', 'hunter')
+username = config.get('CREDS', 'linkedin_username')
+password = config.get('CREDS', 'linkedin_password')
 
 def login():
 	cookie_filename = "cookies.txt"
