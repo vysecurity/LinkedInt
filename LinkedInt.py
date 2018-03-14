@@ -262,6 +262,8 @@ def get_search():
                         user = '{}{}{}'.format(fname, mname[0], lname)
                 if prefix == 'flast':
                     user = '{}{}'.format(fname[0], lname)
+                if prefix == 'firstl':
+                    user = '{}{}'.format(fname,lname[0])
                 if prefix == 'first.last':
                     user = '{}.{}'.format(fname, lname)
                 if prefix == 'fmlast':
@@ -377,10 +379,10 @@ if __name__ == '__main__':
     print
 
     while True:
-        prefix = raw_input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,first.last,fmlast,lastfirst): \n")
+        prefix = raw_input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst): \n")
         prefix = prefix.lower()
         print
-        if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+        if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
             break
         elif prefix == "auto":
             #if auto prefix then we want to use hunter IO to find it.
@@ -402,7 +404,7 @@ if __name__ == '__main__':
             print "[!] %s" % prefix
             if prefix:
                 prefix = prefix.replace("{","").replace("}", "")
-                if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+                if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
                     print "[+] Found %s prefix" % prefix
                     break
                 else:
@@ -412,7 +414,7 @@ if __name__ == '__main__':
                 print "[!] Automatic prefix search failed, please insert a manual choice"
                 continue
         else:
-            print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,first.last,fmlast)"
+            print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)"
 
     print 
 
