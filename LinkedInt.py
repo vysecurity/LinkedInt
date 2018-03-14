@@ -14,7 +14,6 @@ import sys
 import re
 import time
 import requests
-import pdb
 import subprocess
 import json
 import argparse
@@ -416,7 +415,6 @@ if __name__ == '__main__':
             print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,first.last,fmlast)"
 
     print 
-    pdb.set_trace()
 
 
     
