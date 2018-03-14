@@ -14,6 +14,7 @@ import sys
 import re
 import time
 import requests
+import pdb
 import subprocess
 import json
 import argparse
@@ -59,6 +60,7 @@ def login():
 	try:
 		cookie = cookiejar._cookies['.www.linkedin.com']['/']['li_at'].value
 	except:
+                print "[!] Cannot log in"
 		sys.exit(0)
 	
 	cookiejar.save()
@@ -121,7 +123,6 @@ def get_search():
              """
 
     # Do we want to automatically get the company ID?
-
 
     if bCompany:
 	    if bAuto:
@@ -415,6 +416,7 @@ if __name__ == '__main__':
             print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,first.last,fmlast)"
 
     print 
+    pdb.set_trace()
 
 
     
