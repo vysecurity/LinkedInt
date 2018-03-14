@@ -322,7 +322,7 @@ def authenticate():
 if __name__ == '__main__':
     banner()
     # Prompt user for data variables
-    search = args.keywords if args.keywords!=None else raw_input("[*] Enter search Keywords (use quotes for more percise results)\n")
+    search = args.keywords if args.keywords!=None else raw_input("[*] Enter search Keywords (use quotes for more precise results)\n")
     print 
     outfile = args.output if args.output!=None else raw_input("[*] Enter filename for output (exclude file extension)\n")
     print 
@@ -384,7 +384,7 @@ if __name__ == '__main__':
             break
         elif prefix == "auto":
             #if auto prefix then we want to use hunter IO to find it.
-            print "[*] Automaticly using Hunter IO to determine best Prefix"
+            print "[*] Automatically using Hunter IO to determine best Prefix"
             url = "https://hunter.io/trial/v2/domain-search?offset=0&domain=%s&format=json" % suffix
             r = requests.get(url)
             content = json.loads(r.text)
