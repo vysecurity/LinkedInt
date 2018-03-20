@@ -18,6 +18,7 @@ import subprocess
 import json
 import argparse
 import cookielib
+import ConfigParser
 import os
 import urllib
 import math
@@ -34,9 +35,11 @@ parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
 args = parser.parse_args()
-api_key = "" # Hunter API key
-username = "" 	# enter username here
-password = ""	# enter password here
+config = ConfigParser.RawConfigParser()
+config.read('LinkedInt.cfg')
+api_key = config.get('API_KEYS', 'hunter')
+username = config.get('CREDS', 'linkedin_username')
+password = config.get('CREDS', 'linkedin_password')
 
 def login():
 	cookie_filename = "cookies.txt"
@@ -56,6 +59,7 @@ def login():
 	try:
 		cookie = cookiejar._cookies['.www.linkedin.com']['/']['li_at'].value
 	except:
+                print "[!] Cannot log in"
 		sys.exit(0)
 	
 	cookiejar.save()
@@ -118,7 +122,6 @@ def get_search():
              """
 
     # Do we want to automatically get the company ID?
-
 
     if bCompany:
 	    if bAuto:
@@ -259,6 +262,8 @@ def get_search():
                         user = '{}{}{}'.format(fname, mname[0], lname)
                 if prefix == 'flast':
                     user = '{}{}'.format(fname[0], lname)
+                if prefix == 'firstl':
+                    user = '{}{}'.format(fname,lname[0])
                 if prefix == 'first.last':
                     user = '{}.{}'.format(fname, lname)
                 if prefix == 'fmlast':
@@ -319,7 +324,7 @@ def authenticate():
 if __name__ == '__main__':
     banner()
     # Prompt user for data variables
-    search = args.keywords if args.keywords!=None else raw_input("[*] Enter search Keywords (use quotes for more percise results)\n")
+    search = args.keywords if args.keywords!=None else raw_input("[*] Enter search Keywords (use quotes for more precise results)\n")
     print 
     outfile = args.output if args.output!=None else raw_input("[*] Enter filename for output (exclude file extension)\n")
     print 
@@ -374,14 +379,14 @@ if __name__ == '__main__':
     print
 
     while True:
-        prefix = raw_input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,first.last,fmlast,lastfirst): \n")
+        prefix = raw_input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst): \n")
         prefix = prefix.lower()
         print
-        if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+        if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
             break
         elif prefix == "auto":
             #if auto prefix then we want to use hunter IO to find it.
-            print "[*] Automaticly using Hunter IO to determine best Prefix"
+            print "[*] Automatically using Hunter IO to determine best Prefix"
             url = "https://hunter.io/trial/v2/domain-search?offset=0&domain=%s&format=json" % suffix
             r = requests.get(url)
             content = json.loads(r.text)
@@ -399,7 +404,7 @@ if __name__ == '__main__':
             print "[!] %s" % prefix
             if prefix:
                 prefix = prefix.replace("{","").replace("}", "")
-                if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+                if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
                     print "[+] Found %s prefix" % prefix
                     break
                 else:
@@ -409,7 +414,7 @@ if __name__ == '__main__':
                 print "[!] Automatic prefix search failed, please insert a manual choice"
                 continue
         else:
-            print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,first.last,fmlast)"
+            print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)"
 
     print 
 
