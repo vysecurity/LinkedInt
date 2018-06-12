@@ -212,7 +212,7 @@ def get_search():
                 data_occupation = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['occupation']
                 data_location = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['location']
                 try:
-                    data_picture = "https://media.licdn.com/mpr/mpr/shrinknp_400_400%s" % c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.voyager.common.MediaProcessorImage']['id']
+                    data_picture = "%s%s" % (c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['rootUrl'],c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['artifacts'][2]['fileIdentifyingUrlPathSegment'])
                 except:
                     print "[*] No picture found for %s %s, %s" % (data_firstname, data_lastname, data_occupation)
                     data_picture = ""
