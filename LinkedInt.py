@@ -169,7 +169,7 @@ def get_search():
     data_total = content['elements'][0]['total']
 
     # Calculate pages off final results at 40 results/page
-    pages = data_total / 40
+    pages = int(math.ceil(data_total / 40.0))
 
     if pages == 0:
     	pages = 1
