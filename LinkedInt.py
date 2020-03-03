@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # LinkedInt
 # Scrapes LinkedIn without using LinkedIn API
 # Original scraper by @DisK0nn3cT (https://github.com/DisK0nn3cT/linkedin-gatherer)
@@ -6,9 +8,6 @@
 # --- UI Updates
 # --- Constrain to company filters
 # --- Addition of Hunter for e-mail prediction
-
-
-#!/usr/bin/python
 
 import sys
 import re
@@ -35,14 +34,15 @@ parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
 args = parser.parse_args()
+baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 config = ConfigParser.RawConfigParser()
-config.read('LinkedInt.cfg')
+config.read(baseDir + 'LinkedInt.cfg')
 api_key = config.get('API_KEYS', 'hunter')
 username = config.get('CREDS', 'linkedin_username')
 password = config.get('CREDS', 'linkedin_password')
 
 def login():
-	cookie_filename = "cookies.txt"
+	cookie_filename = baseDir + "cookies.txt"
 	cookiejar = cookielib.MozillaCookieJar(cookie_filename)
 	opener = urllib2.build_opener(urllib2.HTTPRedirectHandler(),urllib2.HTTPHandler(debuglevel=0),urllib2.HTTPSHandler(debuglevel=0),urllib2.HTTPCookieProcessor(cookiejar))
 	page = loadPage(opener, "https://www.linkedin.com/")
@@ -300,7 +300,7 @@ def get_search():
         print
 
 def banner():
-        with open('banner.txt', 'r') as f:
+        with open(baseDir + 'banner.txt', 'r') as f:
             data = f.read()
 
             print "\033[1;31m%s\033[0;0m" % data
