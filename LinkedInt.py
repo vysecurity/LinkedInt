@@ -16,25 +16,39 @@ import requests
 import subprocess
 import json
 import argparse
-import cookielib
-import ConfigParser
+try:
+    import http.cookiejar as cookielib
+    from configparser import RawConfigParser
+    from urllib.parse import quote_plus
+except ImportError:
+    import cookielib
+    from ConfigParser import RawConfigParser
+    from urllib import quote_plus
+
+try: 
+    input = raw_input
+except NameError: 
+    pass
+
 import os
-import urllib
 import math
-import urllib2
 import string
 from bs4 import BeautifulSoup
-from thready import threaded
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#from thready import threaded
+
+try:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+except Exception:
+    pass
 
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
 args = parser.parse_args()
-config = ConfigParser.RawConfigParser()
+config = RawConfigParser()
 config.read('LinkedInt.cfg')
 api_key = config.get('API_KEYS', 'hunter')
 username = config.get('CREDS', 'linkedin_username')
@@ -58,11 +72,11 @@ def login():
         }
     rv = s.post(URL + '/checkpoint/lg/login-submit', data=postdata)
     try:
-	cookie = requests.utils.dict_from_cookiejar(s.cookies)
+        cookie = requests.utils.dict_from_cookiejar(s.cookies)
         cookie = cookie['li_at']
     except:
-        print "[!] Cannot log in"
-	sys.exit(0)
+        print("[!] Cannot log in")
+        sys.exit(0)
     return cookie
 
 def get_search():
@@ -109,46 +123,46 @@ def get_search():
     # Do we want to automatically get the company ID?
 
     if bCompany:
-	    if bAuto:
-	        # Automatic
-	        # Grab from the URL 
-	        companyID = 0
-	        url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query=%s" % search
-	        headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
-	        cookies['JSESSIONID'] = 'ajax:0397788525211216808'
-	        r = requests.get(url, cookies=cookies, headers=headers)
-	        content = json.loads(r.text)
-	        firstID = 0
-	        for i in range(0,len(content['elements'])):
-	        	try:
-	        		companyID = content['elements'][i]['hitInfo']['com.linkedin.voyager.typeahead.TypeaheadCompany']['id']
-	        		if firstID == 0:
-	        			firstID = companyID
-	        		print "[Notice] Found company ID: %s" % companyID
-	        	except:
-	        		continue
-	        companyID = firstID
-	        if companyID == 0:
-	        	print "[WARNING] No valid company ID found in auto, please restart and find your own"
-	    else:
-	        # Don't auto, use the specified ID
-	        companyID = bSpecific
+        if bAuto:
+            # Automatic
+            # Grab from the URL 
+            companyID = 0
+            url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query={}".format(search)
+            headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
+            cookies['JSESSIONID'] = 'ajax:0397788525211216808'
+            r = requests.get(url, cookies=cookies, headers=headers)
+            content = json.loads(r.text)
+            firstID = 0
+            for i in range(0,len(content['elements'])):
+                try:
+                    companyID = content['elements'][i]['hitInfo']['com.linkedin.voyager.typeahead.TypeaheadCompany']['id']
+                    if firstID == 0:
+                        firstID = companyID
+                    print("[Notice] Found company ID: {}".format(companyID))
+                except:
+                    continue
+            companyID = firstID
+            if companyID == 0:
+                print("[WARNING] No valid company ID found in auto, please restart and find your own")
+        else:
+            # Don't auto, use the specified ID
+            companyID = bSpecific
 
-	    print
-	    
-	    print "[*] Using company ID: %s" % companyID
+        print()
+        
+        print("[*] Using company ID: {}".format(companyID))
 
-	# Fetch the initial page to get results/page counts
+    # Fetch the initial page to get results/page counts
     if bCompany == False:
-        url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords=%s&origin=OTHER&q=guided&start=0" % search
+        url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords={}&origin=OTHER&q=guided&start=0".format(search)
     else:
-        url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->%s)&origin=OTHER&q=guided&start=0" % (companyID)
+        url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->{})&origin=OTHER&q=guided&start=0".format(companyID)
     
-    print url
+    print(url)
     
     headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
     cookies['JSESSIONID'] = 'ajax:0397788525211216808'
-    #print url
+    
     r = requests.get(url, cookies=cookies, headers=headers)
     content = json.loads(r.text)
     data_total = content['elements'][0]['total']
@@ -157,34 +171,34 @@ def get_search():
     pages = int(math.ceil(data_total / 40.0))
 
     if pages == 0:
-    	pages = 1
+        pages = 1
 
     if data_total % 40 == 0:
         # Becuase we count 0... Subtract a page if there are no left over results on the last page
         pages = pages - 1 
 
     if pages == 0: 
-    	print "[!] Try to use quotes in the search name"
-    	sys.exit(0)
+        print("[!] Try to use quotes in the search name")
+        sys.exit(0)
     
-    print "[*] %i Results Found" % data_total
+    print("[*] {} Results Found".format(data_total))
     if data_total > 1000:
         pages = 25
-        print "[*] LinkedIn only allows 1000 results. Refine keywords to capture all data"
-    print "[*] Fetching %i Pages" % pages
-    print
+        print("[*] LinkedIn only allows 1000 results. Refine keywords to capture all data")
+    print("[*] Fetching {} Pages".format(pages))
+    print()
 
     for p in range(pages):
         # Request results for each page using the start offset
         if bCompany == False:
-            url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords=%s&origin=OTHER&q=guided&start=%i" % (search, p*40)
+            url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords={}&origin=OTHER&q=guided&start={}".format(search, p*40)
         else:
-            url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->%s)&origin=OTHER&q=guided&start=%i" % (companyID, p*40)
-        #print url
+            url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->{})&origin=OTHER&q=guided&start={}".format(companyID, p*40)
+        
         r = requests.get(url, cookies=cookies, headers=headers)
         content = r.text.encode('UTF-8')
         content = json.loads(content)
-        print "[*] Fetching page %i with %i results" % ((p),len(content['elements'][0]['elements']))
+        print("[*] Fetching page {} with {} results".format((p),len(content['elements'][0]['elements'])))
         for c in content['elements'][0]['elements']:
             if 'com.linkedin.voyager.search.SearchProfile' in c['hitInfo'] and c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['headless'] == False:
                 try:
@@ -193,13 +207,13 @@ def get_search():
                     data_industry = ""    
                 data_firstname = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['firstName']
                 data_lastname = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['lastName']
-                data_slug = "https://www.linkedin.com/in/%s" % c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['publicIdentifier']
+                data_slug = "https://www.linkedin.com/in/{}".format(c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['publicIdentifier'])
                 data_occupation = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['occupation']
                 data_location = c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['location']
                 try:
-                    data_picture = "%s%s" % (c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['rootUrl'],c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['artifacts'][2]['fileIdentifyingUrlPathSegment'])
+                    data_picture = "{}{}".format(c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['rootUrl'],c['hitInfo']['com.linkedin.voyager.search.SearchProfile']['miniProfile']['picture']['com.linkedin.common.VectorImage']['artifacts'][2]['fileIdentifyingUrlPathSegment'])
                 except:
-                    print "[*] No picture found for %s %s, %s" % (data_firstname, data_lastname, data_occupation)
+                    print("[*] No picture found for {} {}, {}".format(data_firstname, data_lastname, data_occupation))
                     data_picture = ""
 
                 # incase the last name is multi part, we will split it down
@@ -257,68 +271,68 @@ def get_search():
                     else:
                         user = '{}{}{}'.format(fname[0], mname[0], lname)
                 if prefix == 'lastfirst':
-                	user = '{}{}'.format(lname, fname)
+                    user = '{}{}'.format(lname, fname)
 
                 email = '{}@{}'.format(user, suffix)
 
                 body += "<tr>" \
-                    "<td><a href=\"%s\"><img src=\"%s\" width=200 height=200></a></td>" \
-                    "<td><a href=\"%s\">%s</a></td>" \
-                    "<td>%s</td>" \
-                    "<td>%s</td>" \
-                    "<td>%s</td>" \
-                    "<a>" % (data_slug, data_picture, data_slug, name, email, data_occupation, data_location)
+                    "<td><a href=\"{}\"><img src=\"{}\" width=200 height=200></a></td>" \
+                    "<td><a href=\"{}\">{}</a></td>" \
+                    "<td>{}</td>" \
+                    "<td>{}</td>" \
+                    "<td>{}</td>" \
+                    "<a>".format(data_slug, data_picture, data_slug, name, email, data_occupation, data_location)
                 
-                csv.append('"%s","%s","%s","%s","%s", "%s"' % (data_firstname, data_lastname, name, email, data_occupation, data_location.replace(",",";")))
+                csv.append('"{}","{}","{}","{}","{}", "{}"'.format(data_firstname, data_lastname, name, email, data_occupation, data_location.replace(",",";")))
                 foot = "</table></center>"
-                f = open('{}.html'.format(outfile), 'wb')
+                f = open('{}.html'.format(outfile), 'w')
                 f.write(css)
                 f.write(header)
                 f.write(body)
                 f.write(foot)
                 f.close()
-                f = open('{}.csv'.format(outfile), 'wb')
+                f = open('{}.csv'.format(outfile), 'w')
                 f.writelines('\n'.join(csv))
                 f.close()
             else:
-                print "[!] Headless profile found. Skipping"
-        print
+                print("[!] Headless profile found. Skipping")
+        print()
 
 def banner():
         with open('banner.txt', 'r') as f:
             data = f.read()
 
-            print "\033[1;31m%s\033[0;0m" % data
-            print "\033[1;34mProviding you with Linkedin Intelligence"
-            print "\033[1;32mAuthor: Vincent Yiu (@vysec, @vysecurity)\033[0;0m"
-            print "\033[1;32mOriginal version by @DisK0nn3cT\033[0;0m"
+            print("\033[1;31m{}\033[0;0m".format(data))
+            print("\033[1;34mProviding you with Linkedin Intelligence")
+            print("\033[1;32mAuthor: Vincent Yiu (@vysec, @vysecurity)\033[0;0m")
+            print("\033[1;32mOriginal version by @DisK0nn3cT\033[0;0m")
 
 def authenticate():
     try:
-    	a = login()
-    	print a
+        a = login()
+        print(a)
         session = a
         if len(session) == 0:
             sys.exit("[!] Unable to login to LinkedIn.com")
-        print "[*] Obtained new session: %s" % session
+        print("[*] Obtained new session: {}".format(session))
         cookies = dict(li_at=session)
-    except Exception, e:
-        sys.exit("[!] Could not authenticate to linkedin. %s" % e)
+    except Exception as e:
+        sys.exit("[!] Could not authenticate to linkedin. {}".format(e))
     return cookies
 
 if __name__ == '__main__':
     banner()
     # Prompt user for data variables
-    search = args.keywords if args.keywords!=None else raw_input("[*] Enter search Keywords (use quotes for more precise results)\n")
-    print 
-    outfile = args.output if args.output!=None else raw_input("[*] Enter filename for output (exclude file extension)\n")
-    print 
+    search = args.keywords if args.keywords!=None else input("[*] Enter search Keywords (use quotes for more precise results)\n")
+    print() 
+    outfile = args.output if args.output!=None else input("[*] Enter filename for output (exclude file extension)\n")
+    print() 
     while True:
-        bCompany = raw_input("[*] Filter by Company? (Y/N): \n")
+        bCompany = input("[*] Filter by Company? (Y/N): \n")
         if bCompany.lower() == "y" or bCompany.lower() == "n":
             break
         else:
-            print "[!] Incorrect choice"
+            print("[!] Incorrect choice")
 
     if bCompany.lower() == "y":
         bCompany = True
@@ -330,87 +344,84 @@ if __name__ == '__main__':
     prefix = ""
     suffix = ""
 
-    print
+    print()
 
     if bCompany:
-	    while True:
-	        bSpecific = raw_input("[*] Specify a Company ID (Provide ID or leave blank to automate): \n")
-	        if bSpecific != "":
-	            bAuto = False
-	            if bSpecific != 0:
-	                try:
-	                    int(bSpecific)
-	                    break
-	                except:
-	                    print "[!] Incorrect choice, the ID either has to be a number or blank"
-	                
-	            else:
-	                print "[!] Incorrect choice, the ID either has to be a number or blank"
-	        else:
-	            bAuto = True
-	            break
-
-    print
+        while True:
+            bSpecific = input("[*] Specify a Company ID (Provide ID or leave blank to automate): \n")
+            if bSpecific != "":
+                bAuto = False
+                if bSpecific != 0:
+                    try:
+                        int(bSpecific)
+                        break
+                    except:
+                        print("[!] Incorrect choice, the ID either has to be a number or blank")   
+                else:
+                    print("[!] Incorrect choice, the ID either has to be a number or blank")
+            else:
+                bAuto = True
+                break
+    print()
 
     
     while True:
-        suffix = raw_input("[*] Enter e-mail domain suffix (eg. contoso.com): \n")
+        suffix = input("[*] Enter e-mail domain suffix (eg. contoso.com): \n")
         suffix = suffix.lower()
         if "." in suffix:
             break
         else:
-            print "[!] Incorrect e-mail? There's no dot"
+            print("[!] Incorrect e-mail? There's no dot")
 
-    print
+    print()
 
     while True:
-        prefix = raw_input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst): \n")
+        prefix = input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst): \n")
         prefix = prefix.lower()
-        print
+        print()
         if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
             break
         elif prefix == "auto":
             #if auto prefix then we want to use hunter IO to find it.
-            print "[*] Automatically using Hunter IO to determine best Prefix"
-            url = "https://hunter.io/trial/v2/domain-search?offset=0&domain=%s&format=json" % suffix
+            print("[*] Automatically using Hunter IO to determine best Prefix")
+            url = "https://hunter.io/trial/v2/domain-search?offset=0&domain={}&format=json".format(suffix)
             r = requests.get(url)
             content = json.loads(r.text)
             if "status" in content:
-                print "[!] Rate limited by Hunter IO trial"
-                url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
-                #print url
+                print("[!] Rate limited by Hunter IO trial")
+                url = "https://api.hunter.io/v2/domain-search?domain={}&api_key={}".format(suffix, api_key)                
                 r = requests.get(url)
                 content = json.loads(r.text)
                 if "status" in content:
-                    print "[!] Rate limited by Hunter IO Key"
+                    print("[!] Rate limited by Hunter IO Key")
                     continue
             #print content
             prefix = content['data']['pattern']
-            print "[!] %s" % prefix
+            print("[!] {}".format(prefix))
             if prefix:
                 prefix = prefix.replace("{","").replace("}", "")
                 if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
-                    print "[+] Found %s prefix" % prefix
+                    print("[+] Found {} prefix".format(prefix))
                     break
                 else:
-                    print "[!] Automatic prefix search failed, please insert a manual choice"
+                    print("[!] Automatic prefix search failed, please insert a manual choice")
                     continue
             else:
-                print "[!] Automatic prefix search failed, please insert a manual choice"
+                print("[!] Automatic prefix search failed, please insert a manual choice")
                 continue
         else:
-            print "[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)"
+            print("[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)")
 
-    print 
+    print()
 
 
     
     # URL Encode for the querystring
-    search = urllib.quote_plus(search)
+    search = quote_plus(search)
     cookies = authenticate()
   
     
     # Initialize Scraping
     get_search()
 
-    print "[+] Complete"
+    print("[+] Complete")
