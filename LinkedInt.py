@@ -32,7 +32,7 @@ sys.setdefaultencoding('utf-8')
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
-parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
+parser.add_argument('-o', '--output', help='Output file (do not include extensions)')
 args = parser.parse_args()
 config = ConfigParser.RawConfigParser()
 config.read('LinkedInt.cfg')
@@ -160,7 +160,7 @@ def get_search():
     	pages = 1
 
     if data_total % 40 == 0:
-        # Becuase we count 0... Subtract a page if there are no left over results on the last page
+        # Because we count 0... Subtract a page if there are no left over results on the last page
         pages = pages - 1 
 
     if pages == 0: 
