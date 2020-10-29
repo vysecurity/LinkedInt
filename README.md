@@ -41,7 +41,7 @@ Run LinkedInt.py and follow instructions
 Providing you with Linkedin Intelligence
 Author: Vincent Yiu (@vysec, @vysecurity)
 Original version by @DisK0nn3cT
-[*] Enter search Keywords (use quotes for more percise results)
+[*] Enter search Keywords (use quotes for more precise results)
 "General Motors"
 
 [*] Enter filename for output (exclude file extension)
@@ -59,7 +59,7 @@ gm.com
 [*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,first.last,fmlast):
 auto
 
-[*] Automaticly using Hunter IO to determine best Prefix
+[*] Automatically using Hunter IO to determine best Prefix
 [!] {first}.{last}
 [+] Found first.last prefix
 ```
