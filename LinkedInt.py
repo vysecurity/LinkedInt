@@ -265,9 +265,6 @@ def get_search():
                 foot = "</table></center>"
                 f = open('{}.html'.format(outfile), 'wb')
                 f.write(css.encode())
-                f1=open('only_email.csv','a')
-                f1.write((email+"\n"))
-                f1.close()
                 f.write(header.encode())
                 f.write(body.encode())
                 f.write(foot.encode())
