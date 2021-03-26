@@ -38,6 +38,11 @@ api_key = config.get('API_KEYS', 'hunter')
 username = config.get('CREDS', 'linkedin_username')
 password = config.get('CREDS', 'linkedin_password')
 
+def getCookies(cookie_jar, domain):
+    cookie_dict = cookie_jar.get_dict(domain=domain)
+    found = ['%s=%s' % (name, value) for (name, value) in cookie_dict.items()]
+    return '; '.join(found)
+
 def login():
     URL = 'https://www.linkedin.com'
     s = requests.Session()
@@ -54,13 +59,17 @@ def login():
          'session_key':username,
          'session_password':password,
         }
+    #print(postdata)
     rv = s.post(URL + '/checkpoint/lg/login-submit', data=postdata)
+    if ("behaviour that can result in restriction" in rv.text):
+        print("[!] Your account is restricted, fix it before continuing")
+        sys.exit(0)
     try:
-        print(s.response)
-        cookie = requests.utils.dict_from_cookiejar(s.cookies)
-        cookie = cookie['li_at']
+        #print(s.response)
+        cookie = getCookies(s.cookies, ".linkedin.com")
+        
     except:
-        print("[!] Cannot log in")
+        print("[!] Cannot login")
         sys.exit(0)
     return cookie
 
@@ -109,8 +118,8 @@ def get_search():
 	    if bAuto:
 	        companyID = 0
 	        url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query=%s" % search
-	        headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
-	        cookies['JSESSIONID'] = 'ajax:0397788525211216808'
+	        headers = {'Csrf-Token':'ajax:0397788525211216810', 'X-RestLi-Protocol-Version':'2.0.0'}
+	        cookies['JSESSIONID'] = 'ajax:0397788525211216810'
 	        r = requests.get(url, cookies=cookies, headers=headers)
 	        content = json.loads(r.text)
 	        firstID = 0
