@@ -56,6 +56,7 @@ def login():
         }
     rv = s.post(URL + '/checkpoint/lg/login-submit', data=postdata)
     try:
+        print(s.response)
         cookie = requests.utils.dict_from_cookiejar(s.cookies)
         cookie = cookie['li_at']
     except:
@@ -356,17 +357,12 @@ if __name__ == '__main__':
             break
         elif prefix == "auto":
             print("[*] Automatically using Hunter IO to determine best Prefix")
-            url = "https://hunter.io/trial/v2/domain-search?offset=0&domain=%s&format=json" % suffix
+            url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
             r = requests.get(url)
             content = json.loads(r.text)
             if "status" in content:
-                print("[!] Rate limited by Hunter IO trial")
-                url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
-                r = requests.get(url)
-                content = json.loads(r.text)
-                if "status" in content:
-                    print("[!] Rate limited by Hunter IO Key")
-                    continue
+                print("[!] Rate limited by Hunter IO Key")
+                continue
             prefix = content['data']['pattern']
             print("[!] %s" % prefix)
             if prefix:
