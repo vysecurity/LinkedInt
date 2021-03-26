@@ -292,6 +292,9 @@ def authenticate():
     return cookies
 
 if __name__ == '__main__':
+    a = open("banner.txt","r")
+    print(a.read())
+    a.close()
     search = args.keywords if args.keywords!=None else input("[*] Enter search Keywords (use quotes for more precise results)\n")
     print("")
     outfile = args.output if args.output!=None else input("[*] Enter filename for output (exclude file extension)\n")
