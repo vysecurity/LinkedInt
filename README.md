@@ -84,3 +84,7 @@ auto
 [!] {first}.{last}
 [+] Found first.last prefix
 ```
+
+Output (HTML):
+
+![Output HTML Report](asset/htmlreport.png)
