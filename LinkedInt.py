@@ -7,7 +7,7 @@
 # --- Constrain to company filters
 # --- Addition of Hunter for e-mail prediction
 
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import re
