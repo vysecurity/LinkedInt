@@ -11,6 +11,11 @@
 * LinkedInt by Vincent Yiu (@vysecurity): https://www.vincentyiu.com | https://vysecurity.rocks
 * Original Scraper by Danny Chrastil (@DisK0nn3cT): https://github.com/DisK0nn3cT/linkedin-gatherer
 
+Contributors:
+
+* Leesoh
+* harshil-shah004
+
 # Installation
 ```
 pip install -r requirements.txt
