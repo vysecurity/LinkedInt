@@ -1,3 +1,7 @@
+# Sponsor Open Source Tooling
+
+* Feel free to sponsor me for maintaining the tool: https://github.com/sponsors/vysecurity
+
 # Authors
 
 * LinkedInt by Vincent Yiu (@vysecurity): https://www.vincentyiu.com | https://vysecurity.rocks
