@@ -34,10 +34,12 @@ parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extensions)')
 args = parser.parse_args()
 config = configparser.RawConfigParser()
-config.read('LinkedInt.cfg')
+config.read(baseDir + 'LinkedInt.cfg')
 api_key = config.get('API_KEYS', 'hunter')
 username = config.get('CREDS', 'linkedin_username')
 password = config.get('CREDS', 'linkedin_password')
+
+baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 
 def getCookies(cookie_jar, domain):
     cookie_dict = cookie_jar.get_dict(domain=domain)
@@ -301,13 +303,13 @@ def get_search():
                 
                 csv.append('"%s","%s","%s","%s","%s", "%s"' % (data_firstname, data_lastname, name, email, data_occupation, data_location.replace(",",";")))
                 foot = "</table></center>"
-                f = open('{}.html'.format(outfile), 'wb')
+                f = open(baseDir + '{}.html'.format(outfile), 'wb')
                 f.write(css.encode())
                 f.write(header.encode())
                 f.write(body.encode())
                 f.write(foot.encode())
                 f.close()
-                f = open('{}.csv'.format(outfile), 'wb')
+                f = open(baseDir + '{}.csv'.format(outfile), 'wb')
                 #newcsv='\n'.join(csv)
                 #f.writelines(newcsv.encode())
                 for x in csv:
@@ -330,7 +332,7 @@ def authenticate():
 
 if __name__ == '__main__':
     print("")
-    a = open("banner.txt","r")
+    a = open(baseDir + "banner.txt","r")
     print(a.read())
     a.close()
     print("")
