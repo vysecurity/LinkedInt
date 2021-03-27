@@ -31,7 +31,7 @@ import urllib.parse
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
-parser.add_argument('-o', '--output', help='Output file (do not include extentions)')
+parser.add_argument('-o', '--output', help='Output file (do not include extensions)')
 args = parser.parse_args()
 config = configparser.RawConfigParser()
 config.read('LinkedInt.cfg')
