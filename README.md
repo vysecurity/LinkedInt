@@ -34,18 +34,15 @@ Additions:
 * Constrain to company filters
 * Addition of Hunter for e-mail prediction
 
-# To-Do List
-
-* Allow for horizontal scraping and mass automated company domain, and format prediction per company
-* Add Natural Language Processing techniques on titles to discover groups of similar titles to be stuck into same "department". This should then be visualised in a graph.
-
 # Usage
 
-Put in LinkedIn credentials in LinkedInt.cfg
-Put Hunter.io API key in LinkedInt.cfg
-Run LinkedInt.py and follow instructions
+1. Put in LinkedIn credentials in LinkedInt.cfg
+2. Put Hunter.io API key in LinkedInt.cfg
+3. Run LinkedInt.py and follow instructions (example below).
 
 # Example
+
+Using General Motors as the target as they have a bug bounty program.
 
 ```
 ██╗     ██╗███╗   ██╗██╗  ██╗███████╗██████╗ ██╗███╗   ██╗████████╗
