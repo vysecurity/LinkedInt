@@ -18,6 +18,16 @@ pip install -r requirements.txt
 
 # Change Log
 
+[v1.1 27-03-2021]
+Fixes:
+* Fixed the authentication flow
+* Fixed hunter API demo key - removed
+
+Additions:
+* Added better looking missing image value for the profiles with no photo.
+* Embedded all images into the HTML file to allow for offline viewing.
+* Added credits
+
 [v0.1 BETA 12-07-2017]
 Additions:
 * UI Updates
