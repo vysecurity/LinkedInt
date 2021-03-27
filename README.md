@@ -2,6 +2,10 @@
 
 * Feel free to sponsor me for maintaining the tool: https://github.com/sponsors/vysecurity
 
+# Disclaimer
+
+* The project is to be used for educational and testing purposes only.
+
 # Authors
 
 * LinkedInt by Vincent Yiu (@vysecurity): https://www.vincentyiu.com | https://vysecurity.rocks
