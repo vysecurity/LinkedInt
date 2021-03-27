@@ -27,6 +27,7 @@ import string
 from bs4 import BeautifulSoup
 import urllib.parse
 
+baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
@@ -39,7 +40,6 @@ api_key = config.get('API_KEYS', 'hunter')
 username = config.get('CREDS', 'linkedin_username')
 password = config.get('CREDS', 'linkedin_password')
 
-baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 
 def getCookies(cookie_jar, domain):
     cookie_dict = cookie_jar.get_dict(domain=domain)
