@@ -1,5 +1,5 @@
 <p align="center">
-![LinkedInt](asset/linkedint.png)  
+<img src="https://github.com/vysecurity/LinkedInt/blob/master/asset/linkedint.png?raw=true">
 </p>
 
 # Sponsor Open Source Tooling
