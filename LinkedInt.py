@@ -310,8 +310,8 @@ def get_search():
                 f.write(foot.encode())
                 f.close()
                 f = open(baseDir + '{}.csv'.format(outfile), 'wb')
-                #newcsv='\n'.join(csv)
-                #f.writelines(newcsv.encode())
+                newcsv='\n'.join(csv)
+                f.writelines(newcsv.encode())
                 for x in csv:
                     f.write(x.join('\n').encode())
                 f.close()
