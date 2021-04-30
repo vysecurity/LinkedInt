@@ -22,6 +22,8 @@ Contributors:
 
 # Installation
 ```
+git clone https://github.com/vysecurity/LinkedInt
+cd LinkedInt
 pip install -r requirements.txt
 ```
 
