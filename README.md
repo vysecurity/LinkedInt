@@ -29,6 +29,11 @@ pip install -r requirements.txt
 
 # Change Log
 
+**[v1.1 01-05-2021]**
+
+Fixes:
+* Temporary fix for location field missing
+
 **[v1.1 27-03-2021]**
 
 Fixes:
