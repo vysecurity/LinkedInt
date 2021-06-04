@@ -223,7 +223,7 @@ def get_search():
                     data_picture = ""
 
                
-
+                data_slug = repr(data_slug.encode("utf-8")).replace("\\x","%").replace("b","",1).replace("'","")
                 parts = data_lastname.split()
 
                 name = data_firstname + " " + data_lastname
@@ -311,7 +311,7 @@ def get_search():
                 f.close()
                 f = open(baseDir + '{}.csv'.format(outfile), 'wb')
                 newcsv='\n'.join(csv)
-                f.writelines(newcsv.encode())
+                f.write(newcsv.encode())
                 for x in csv:
                     f.write(x.join('\n').encode())
                 f.close()
