@@ -332,7 +332,7 @@ def authenticate():
 
 if __name__ == '__main__':
     print("")
-    a = open(baseDir + "banner.txt","r")
+    a = open(baseDir + "banner.txt","r", encoding="utf-8")
     print(a.read())
     a.close()
     print("")
