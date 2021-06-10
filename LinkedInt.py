@@ -223,7 +223,7 @@ def get_search():
                     data_picture = ""
 
                
-
+                data_slug = repr(data_slug.encode("utf-8")).replace("\\x","%").replace("b","",1).replace("'","")
                 parts = data_lastname.split()
 
                 name = data_firstname + " " + data_lastname
@@ -332,7 +332,7 @@ def authenticate():
 
 if __name__ == '__main__':
     print("")
-    a = open(baseDir + "banner.txt","r")
+    a = open(baseDir + "banner.txt","r", encoding="utf-8")
     print(a.read())
     a.close()
     print("")
