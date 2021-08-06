@@ -6,7 +6,7 @@
 # --- UI Updates
 # --- Constrain to company filters
 # --- Addition of Hunter for e-mail prediction
-# --- Location filtering
+# --- Added location filtering
 
 #!/usr/bin/python3
 
@@ -32,8 +32,12 @@ baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
-parser.add_argument('-u', '--keywords', help='Keywords to search')
+parser.add_argument('-k', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extensions)')
+parser.add_argument('-c', '--company', type=int,help='Company ID')
+parser.add_argument('-d', '--domain', help='E-mail domain suffix (eg. contoso.com)')
+parser.add_argument('-p', '--prefix', choices=['auto','full','firstlast','firstmlast','flast','firstl','first.last','fmlast','lastfirst','first'], help='prefix format for e-mail generation')
+parser.add_argument('-l', '--location', help='Filter by region (eg. us:0)')
 args = parser.parse_args()
 config = configparser.RawConfigParser()
 config.read(baseDir + 'LinkedInt.cfg')
@@ -91,7 +95,7 @@ def login():
         sys.exit(0)
     return cookie
 
-def get_search():
+def get_search(bCompany, bAuto, bSpecific, cookies, prefix, suffix, outfile, search, location = None):
 
     body = ""
     csv = []
@@ -139,56 +143,61 @@ def get_search():
              """
 
     if bCompany:
-	    if bAuto:
-	        companyID = 0
-	        url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query=%s" % search
-	        headers = {'Csrf-Token':'ajax:0397788525211216810', 'X-RestLi-Protocol-Version':'2.0.0'}
-	        cookies['JSESSIONID'] = 'ajax:0397788525211216810'
-	        r = requests.get(url, cookies=cookies, headers=headers)
-	        content = json.loads(r.text)
-	        firstID = 0
-	        for i in range(0,len(content['elements'])):
-	        	try:
-	        		companyID = content['elements'][i]['hitInfo']['com.linkedin.voyager.typeahead.TypeaheadCompany']['id']
-	        		if firstID == 0:
-	        			firstID = companyID
-	        		print("[Notice] Found company ID: %s" % companyID)
-	        	except:
-	        		continue
-	        companyID = firstID
-	        if companyID == 0:
-	        	print("[WARNING] No valid company ID found in auto, please restart and find your own")
-	    else:
-	        companyID = bSpecific
+        if bAuto:
+            companyID = 0
+            url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query=%s" % search
+            headers = {'Csrf-Token':'ajax:0397788525211216810', 'X-RestLi-Protocol-Version':'2.0.0'}
+            cookies['JSESSIONID'] = 'ajax:0397788525211216810'
+            r = requests.get(url, cookies=cookies, headers=headers)
+            content = json.loads(r.text)
+            firstID = 0
+            for i in range(0,len(content['elements'])):
+                try:
+                    companyID = content['elements'][i]['hitInfo']['com.linkedin.voyager.typeahead.TypeaheadCompany']['id']
+                    if firstID == 0:
+                        firstID = companyID
+                    print("[Notice] Found company ID: %s" % companyID)
+                except:
+                    continue
+            companyID = firstID
+            if companyID == 0:
+                print("[WARNING] No valid company ID found in auto, please restart and find your own")
+        else:
+            companyID = bSpecific
 
-	    print("")
-	    
-	    print("[*] Using company ID: %s" % companyID)
+        print("")
+        
+        print("[*] Using company ID: %s" % companyID)
 
     if bCompany == False:
         url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords=%s&origin=OTHER&q=guided&start=0" % search
     else:
         url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->%s)&origin=OTHER&q=guided&start=0" % (companyID)
-    
+
+    if location != None:
+        url = url.replace("facetCurrentCompany","facetGeoRegion->%s,facetCurrentCompany" % (urllib.parse.quote_plus((location)))
     print(url)
     
     headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
     cookies['JSESSIONID'] = 'ajax:0397788525211216808'
     r = requests.get(url, cookies=cookies, headers=headers)
     content = json.loads(r.text)
+    if len(content['elements']) == 0:
+        print("[*] No results found")
+        return
     data_total = content['elements'][0]['total']
 
     pages = int(math.ceil(data_total / 40.0))
 
     if pages == 0:
-    	pages = 1
+        pages = 1
 
     if data_total % 40 == 0:
         pages = pages - 1 
 
     if pages == 0: 
-    	print("[!] Try to use quotes in the search name")
-    	sys.exit(0)
+        print("[!] Try to use quotes in the search name")
+        sys.exit(0)
     
     print("[*] %i Results Found" % data_total)
     if data_total > 1000:
@@ -279,19 +288,23 @@ def get_search():
                     else:
                         user = '{}{}{}'.format(fname[0], mname[0], lname)
                 if prefix == 'lastfirst':
-                	user = '{}{}'.format(lname, fname)
+                    user = '{}{}'.format(lname, fname)
                 if prefix == 'first':
-                	user = '{}'.format(fname)
-	
+                    user = '{}'.format(fname)
+    
 
                 email = '{}@{}'.format(user, suffix)
                 ct = ""
+                nopic = True
                 if ("http" in data_picture):
-
-                    data = requests.get(data_picture)
-                    b64data = base64.b64encode(data.content).decode('ascii')
-                    ct = data.headers['Content-Type']
-                else:
+                    try:
+                        data = requests.get(data_picture)
+                        b64data = base64.b64encode(data.content).decode('ascii')
+                        ct = data.headers['Content-Type']
+                        nopic = False
+                    except:
+                        nopic = True
+                if nopic:
                     b64data = "/9j/4AAQSkZJRgABAQEBLAEsAAD/4QCFRXhpZgAASUkqAAgAAAABAA4BAgBjAAAAGgAAAAAAAABNYWxlIGZhY2Ugc2lsaG91ZXR0ZSBvciBpY29uLiBNYW4gYXZhdGFyIHByb2ZpbGUuIFVua25vd24gb3IgYW5vbnltb3VzIHBlcnNvbi4gVmVjdG9yIGlsbHVzdHJhdGlvbi7/4QWLaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/Pgo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj4KCTxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CgkJPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczpJcHRjNHhtcENvcmU9Imh0dHA6Ly9pcHRjLm9yZy9zdGQvSXB0YzR4bXBDb3JlLzEuMC94bWxucy8iICAgeG1sbnM6R2V0dHlJbWFnZXNHSUZUPSJodHRwOi8veG1wLmdldHR5aW1hZ2VzLmNvbS9naWZ0LzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGx1cz0iaHR0cDovL25zLnVzZXBsdXMub3JnL2xkZi94bXAvMS4wLyIgIHhtbG5zOmlwdGNFeHQ9Imh0dHA6Ly9pcHRjLm9yZy9zdGQvSXB0YzR4bXBFeHQvMjAwOC0wMi0yOS8iIHhtbG5zOnhtcFJpZ2h0cz0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3JpZ2h0cy8iIHBob3Rvc2hvcDpDcmVkaXQ9IkdldHR5IEltYWdlcy9pU3RvY2twaG90byIgR2V0dHlJbWFnZXNHSUZUOkFzc2V0SUQ9IjEwODc1MzE2NDIiIHhtcFJpZ2h0czpXZWJTdGF0ZW1lbnQ9Imh0dHBzOi8vd3d3LmlzdG9ja3Bob3RvLmNvbS9sZWdhbC9saWNlbnNlLWFncmVlbWVudD91dG1fbWVkaXVtPW9yZ2FuaWMmYW1wO3V0bV9zb3VyY2U9Z29vZ2xlJmFtcDt1dG1fY2FtcGFpZ249aXB0Y3VybCIgPgo8ZGM6Y3JlYXRvcj48cmRmOlNlcT48cmRmOmxpPlZpY3RvciBNZXRlbHNraXk8L3JkZjpsaT48L3JkZjpTZXE+PC9kYzpjcmVhdG9yPjxkYzpkZXNjcmlwdGlvbj48cmRmOkFsdD48cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPk1hbGUgZmFjZSBzaWxob3VldHRlIG9yIGljb24uIE1hbiBhdmF0YXIgcHJvZmlsZS4gVW5rbm93biBvciBhbm9ueW1vdXMgcGVyc29uLiBWZWN0b3IgaWxsdXN0cmF0aW9uLjwvcmRmOmxpPjwvcmRmOkFsdD48L2RjOmRlc2NyaXB0aW9uPgo8cGx1czpMaWNlbnNvcj48cmRmOlNlcT48cmRmOmxpIHJkZjpwYXJzZVR5cGU9J1Jlc291cmNlJz48cGx1czpMaWNlbnNvclVSTD5odHRwczovL3d3dy5pc3RvY2twaG90by5jb20vcGhvdG8vbGljZW5zZS1nbTEwODc1MzE2NDItP3V0bV9tZWRpdW09b3JnYW5pYyZhbXA7dXRtX3NvdXJjZT1nb29nbGUmYW1wO3V0bV9jYW1wYWlnbj1pcHRjdXJsPC9wbHVzOkxpY2Vuc29yVVJMPjwvcmRmOmxpPjwvcmRmOlNlcT48L3BsdXM6TGljZW5zb3I+CgkJPC9yZGY6RGVzY3JpcHRpb24+Cgk8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJ3Ij8+Cv/tALZQaG90b3Nob3AgMy4wADhCSU0EBAAAAAAAmhwCUAAQVmljdG9yIE1ldGVsc2tpeRwCeABjTWFsZSBmYWNlIHNpbGhvdWV0dGUgb3IgaWNvbi4gTWFuIGF2YXRhciBwcm9maWxlLiBVbmtub3duIG9yIGFub255bW91cyBwZXJzb24uIFZlY3RvciBpbGx1c3RyYXRpb24uHAJuABhHZXR0eSBJbWFnZXMvaVN0b2NrcGhvdG//2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEm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AQAAAAAAAAAAAAAAQAAAATbbbbbbbbbbbbaAAAAAAAAAAAAAAAAAAACAAAAAbbbbbbbbbbbbbQAAAAAAAAAAAAAAAAAACAAAAADbbbbbbbbbbbbKAAAAAAAAAAAAAAAAAAAQAAAAAbbbbbbbbbbbbbQAAAAAAAAAAAAAAAAAAQAAAAADbbbbbbbbbbbbLAAAAACAAAAAAAAAAAAAAAAAACbbbbbbbbbbbbbIAAAAAQAAAAAAAAAAAAQAAAAATbbbbbbbbbbbbbAAAAAAAAAAAAAAAAAASAAAAACbbbbbbbbbbbbbAAAAAACAAAAAAAAAAAAAAAAAADbbbbbbbbbbbbaAAAAAAAAAAAAAAAAAAAAAAAAATbbbbbbbbbbbbQAAAAACQAAAAAAAAAAAAAAAAACbbbbbbbbbbbbaAAAAAACAAAAAAAAAAAAAAAAAABbbbbbbbbbbbYAAAAAAAQAAAAAAAAAACAAAAAAACbbbbbbbbbbaAAAAAAAAAAAAAAAAAAAQAAAAAAADbbbbbbbbbaAAAAAAAAAAAAAAAAAAAQAAAAAAAAbbbbbbbbbbQAAAAAAACAAAAAAAAAACAAAAAAAACbbbbbbbbbaAAAAAAAAQAAAAAAAAAACAAAAAAAATbbbbbbbbZAAAAAAAAAAAAAAAAAAAAAAAAAAAACLbbbbbbbbAAAAAAAAAAAAAAAAAAAACAAAAAAAAAbbbbbbbbYAAAAAAAAAAAAAAAAAAAAQAAAAAAAADbbbbbbbYAAAAAAAAAAAAAAAAAAAACAAAAAAAAALbbbbbbbQAAAAAAAAAAAAAAAAAAAAAAAAAAAAABbbbbbbbaAAAAAAAACAAAAAAAAAAACAAAAAAAAAbbbbbbbbIAAAAAAAAQAAAAAAAAAAACAAAAAAAAbbbbbbbbZSAAAAAAAAAAAAAAAAAAAAAAAAAAATbbbbbbbbbbKAAAAAACAAAAAAAAAAAACAAAAAALbbbbbbbbbbbbAAAAAAQAAAAAAAAAAAACAAACRbbbbbbbbbbbbbbLQAAASAAAAAAAAAAAAASAABbbbbbbbbbbbbbbbbbYAACAAAAAAAAAAAAAAAQLbbbbbbbbbbbbbbbbbbbAAQAAAAAAAAAAAAACRbbbbbbbbbbbbbbbbbbbbbJQAAAAAAAAAAAAAAAbbbbbbbbbbbbbbbbbbbbbbYAAAAA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"
                     ct = "image/jpeg"
                 body += "<tr>" \
@@ -321,17 +334,17 @@ def get_search():
         print("")
 def authenticate():
     try:
-    	a = login()
-    	session = a
-    	if len(session) == 0:
-    		sys.exit("[!] Unable to login to LinkedIn.com")
-    	print("[*] Obtained new session")
-    	cookies = dict(li_at=session)
+        a = login()
+        session = a
+        if len(session) == 0:
+            sys.exit("[!] Unable to login to LinkedIn.com")
+        print("[*] Obtained new session")
+        cookies = dict(li_at=session)
     except Exception:
         sys.exit("[!] Could not authenticate to linkedin. %s" % e)
     return cookies
 
-if __name__ == '__main__':
+def main():
     print("")
     a = open(baseDir + "banner.txt","r")
     print(a.read())
@@ -343,92 +356,125 @@ if __name__ == '__main__':
     search = args.keywords if args.keywords!=None else input("[*] Enter search Keywords (use quotes for more precise results)\n")
     print("")
     outfile = args.output if args.output!=None else input("[*] Enter filename for output (exclude file extension)\n")
-    print("") 
-    while True:
-        bCompany = input("[*] Filter by Company? (Y/N): \n")
-        if bCompany.lower() == "y" or bCompany.lower() == "n":
-            break
-        else:
-            print("[!] Incorrect choice")
+    print("")
 
-    if bCompany.lower() == "y":
+    if args.company != None:
+        bAuto = False
+        bSpecific = int(args.company)
         bCompany = True
     else:
-        bCompany = False
+        while True:
+            bCompany = input("[*] Filter by Company? (Y/N): \n")
+            if bCompany.lower() == "y" or bCompany.lower() == "n":
+                break
+            else:
+                print("[!] Incorrect choice")
 
-    bAuto = True
-    bSpecific = 0
-    prefix = ""
-    suffix = ""
-
-    print("")
-
-    if bCompany:
-	    while True:
-	        bSpecific = input("[*] Specify a Company ID (Provide ID or leave blank to automate): \n")
-	        if bSpecific != "":
-	            bAuto = False
-	            if bSpecific != 0:
-	                try:
-	                    int(bSpecific)
-	                    break
-	                except:
-	                    print("[!] Incorrect choice, the ID either has to be a number or blank")
-	                
-	            else:
-	                print("[!] Incorrect choice, the ID either has to be a number or blank")
-	        else:
-	            bAuto = True
-	            break
-
-    print("")
-
-    
-    while True:
-        suffix = input("[*] Enter e-mail domain suffix (eg. contoso.com): \n")
-        suffix = suffix.lower()
-        if "." in suffix:
-            break
+        if bCompany.lower() == "y":
+            bCompany = True
         else:
-            print("[!] Incorrect e-mail? There's no dot")
+            bCompany = False
 
-    print("")
+        bAuto = True
+        bSpecific = 0
+        prefix = ""
+        suffix = ""
 
-    while True:
-        prefix = input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst,first): \n")
-        prefix = prefix.lower()
         print("")
-        if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first_last"or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
-            break
-        elif prefix == "auto":
-            print("[*] Automatically using Hunter IO to determine best Prefix")
-            url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
-            r = requests.get(url)
-            content = json.loads(r.text)
-            if "status" in content:
-                print("[!] Rate limited by Hunter IO Key")
-                continue
-            prefix = content['data']['pattern']
-            print("[!] %s" % prefix)
-            if prefix:
-                prefix = prefix.replace("{","").replace("}", "")
-                if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
-                    print("[+] Found %s prefix" % prefix)
+        
+        if bCompany:
+            while True:
+                bSpecific = input("[*] Specify a Company ID (Provide ID or leave blank to automate): \n")
+                if bSpecific != "":
+                    bAuto = False
+                    if bSpecific != 0:
+                        try:
+                            int(bSpecific)
+                            break
+                        except:
+                            print("[!] Incorrect choice, the ID either has to be a number or blank")
+                        
+                    else:
+                        print("[!] Incorrect choice, the ID either has to be a number or blank")
+                else:
+                    bAuto = True
                     break
+        print("")
+
+    if args.domain != None:
+        suffix = args.domain
+        if not("." in suffix):
+            print("[!] Incorrect e-mail? There's no dot")
+            return
+    else:
+        while True:
+            suffix = input("[*] Enter e-mail domain suffix (eg. contoso.com): \n")
+            suffix = suffix.lower()
+            if "." in suffix:
+                break
+            else:
+                print("[!] Incorrect e-mail? There's no dot")
+        print("")
+
+    if args.prefix != None:
+        prefix = args.prefix.lower()
+        if prefix == "auto":
+                print("[*] Automatically using Hunter IO to determine best Prefix")
+                url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
+                r = requests.get(url)
+                content = json.loads(r.text)
+                if "status" in content:
+                    print("[!] Rate limited by Hunter IO Key, please insert a manual choice or try again later")
+                    return
+                prefix = content['data']['pattern']
+                print("[!] %s" % prefix)
+                if prefix:
+                    prefix = prefix.replace("{","").replace("}", "")
+                    if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+                        print("[+] Found %s prefix" % prefix)
+                    else:
+                        print("[!] Automatic prefix search failed, please insert a manual choice")
+                        return
+                else:
+                    print("[!] Automatic prefix search failed, please insert a manual choice")
+                    return
+    else:
+        while True:
+            prefix = input("[*] Select a prefix for e-mail generation (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast,lastfirst,first): \n")
+            prefix = prefix.lower()
+            print("")
+            if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first_last"or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+                break
+            elif prefix == "auto":
+                print("[*] Automatically using Hunter IO to determine best Prefix")
+                url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
+                r = requests.get(url)
+                content = json.loads(r.text)
+                if "status" in content:
+                    print("[!] Rate limited by Hunter IO Key")
+                    continue
+                prefix = content['data']['pattern']
+                print("[!] %s" % prefix)
+                if prefix:
+                    prefix = prefix.replace("{","").replace("}", "")
+                    if prefix == "full" or prefix == "firstlast" or prefix == "firstmlast" or prefix == "flast" or prefix == "firstl" or prefix =="first" or prefix == "first.last" or prefix == "fmlast" or prefix == "lastfirst":
+                        print("[+] Found %s prefix" % prefix)
+                        break
+                    else:
+                        print("[!] Automatic prefix search failed, please insert a manual choice")
+                        continue
                 else:
                     print("[!] Automatic prefix search failed, please insert a manual choice")
                     continue
             else:
-                print("[!] Automatic prefix search failed, please insert a manual choice")
-                continue
-        else:
-            print("[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)")
-
-    print("")
+                print("[!] Incorrect choice, please select a value from (auto,full,firstlast,firstmlast,flast,firstl,first.last,fmlast)")
+        print("")
 
     search = urllib.parse.quote_plus(search)
     cookies = authenticate()
-  
-    get_search()
+    get_search(bCompany, bAuto, bSpecific, cookies, prefix, suffix, outfile, search, args.location)
 
     print("[+] Complete")
+
+if __name__ == '__main__':
+    main()
