@@ -1,11 +1,12 @@
 # LinkedInt
 # Scrapes LinkedIn without using LinkedIn API
 # Original scraper by @DisK0nn3cT (https://github.com/DisK0nn3cT/linkedin-gatherer)
-# Modified by @vysecurity
+# Modified by @vysecurity and @p3nt4
 # - Additions:
 # --- UI Updates
 # --- Constrain to company filters
 # --- Addition of Hunter for e-mail prediction
+# --- Location filtering
 
 #!/usr/bin/python3
 
