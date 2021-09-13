@@ -175,7 +175,7 @@ def get_search(bCompany, bAuto, bSpecific, cookies, prefix, suffix, outfile, sea
         url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->%s)&origin=OTHER&q=guided&start=0" % (companyID)
 
     if location != None:
-        url = url.replace("facetCurrentCompany","facetGeoRegion->%s,facetCurrentCompany" % (urllib.parse.quote_plus((location)))
+        url = url.replace("facetCurrentCompany","facetGeoRegion->%s,facetCurrentCompany" % (urllib.parse.quote_plus((location))))
     print(url)
     
     headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
