@@ -27,12 +27,17 @@ import string
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# Disable certificate validation warnings
+from urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 baseDir = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
 
 """ Setup Argument Parameters """
 parser = argparse.ArgumentParser(description='Discovery LinkedIn')
 parser.add_argument('-u', '--keywords', help='Keywords to search')
 parser.add_argument('-o', '--output', help='Output file (do not include extensions)')
+parser.add_argument('-k', '--insecure', help='Allows "insecure" TLS connections', default=True, action='store_false')
 args = parser.parse_args()
 config = configparser.RawConfigParser()
 config.read(baseDir + 'LinkedInt.cfg')
@@ -49,7 +54,7 @@ def getCookies(cookie_jar, domain):
 def login():
     URL = 'https://www.linkedin.com'
     s = requests.Session()
-    rv = s.get(URL + '/uas/login?trk=guest_homepage-basic_nav-header-signin')
+    rv = s.get(URL + '/uas/login?trk=guest_homepage-basic_nav-header-signin', verify=ssl_check)
     p = BeautifulSoup(rv.content, "html.parser")
 
 
@@ -76,7 +81,7 @@ def login():
          'session_password':password, 'loginFlow':'REMEMBER_ME_OPTIN'
         }
     #print(postdata)
-    rv = s.post(URL + '/checkpoint/lg/login-submit', data=postdata)
+    rv = s.post(URL + '/checkpoint/lg/login-submit', data=postdata, verify=ssl_check)
     #print(rv.text)
     if ("behaviour that can result in restriction" in rv.text):
         print("[!] Your account is restricted, fix it before continuing")
@@ -143,7 +148,7 @@ def get_search():
 	        url = "https://www.linkedin.com/voyager/api/typeahead/hits?q=blended&query=%s" % search
 	        headers = {'Csrf-Token':'ajax:0397788525211216810', 'X-RestLi-Protocol-Version':'2.0.0'}
 	        cookies['JSESSIONID'] = 'ajax:0397788525211216810'
-	        r = requests.get(url, cookies=cookies, headers=headers)
+	        r = requests.get(url, cookies=cookies, headers=headers, verify=ssl_check)
 	        content = json.loads(r.text)
 	        firstID = 0
 	        for i in range(0,len(content['elements'])):
@@ -173,7 +178,7 @@ def get_search():
     
     headers = {'Csrf-Token':'ajax:0397788525211216808', 'X-RestLi-Protocol-Version':'2.0.0'}
     cookies['JSESSIONID'] = 'ajax:0397788525211216808'
-    r = requests.get(url, cookies=cookies, headers=headers)
+    r = requests.get(url, cookies=cookies, headers=headers, verify=ssl_check)
     content = json.loads(r.text)
     data_total = content['elements'][0]['total']
 
@@ -201,7 +206,7 @@ def get_search():
             url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List()&keywords=%s&origin=OTHER&q=guided&start=%i" % (search, p*40)
         else:
             url = "https://www.linkedin.com/voyager/api/search/cluster?count=40&guides=List(v->PEOPLE,facetCurrentCompany->%s)&origin=OTHER&q=guided&start=%i" % (companyID, p*40)
-        r = requests.get(url, cookies=cookies, headers=headers)
+        r = requests.get(url, cookies=cookies, headers=headers, verify=ssl_check)
         content = r.text.encode('UTF-8')
         content = json.loads(content)
         print("[*] Fetching page %i with %i results" % ((p),len(content['elements'][0]['elements'])))
@@ -287,7 +292,7 @@ def get_search():
                 ct = ""
                 if ("http" in data_picture):
 
-                    data = requests.get(data_picture)
+                    data = requests.get(data_picture, verify=ssl_check)
                     b64data = base64.b64encode(data.content).decode('ascii')
                     ct = data.headers['Content-Type']
                 else:
@@ -342,7 +347,8 @@ if __name__ == '__main__':
     search = args.keywords if args.keywords!=None else input("[*] Enter search Keywords (use quotes for more precise results)\n")
     print("")
     outfile = args.output if args.output!=None else input("[*] Enter filename for output (exclude file extension)\n")
-    print("") 
+    print("")
+    ssl_check = args.insecure
     while True:
         bCompany = input("[*] Filter by Company? (Y/N): \n")
         if bCompany.lower() == "y" or bCompany.lower() == "n":
@@ -402,7 +408,7 @@ if __name__ == '__main__':
         elif prefix == "auto":
             print("[*] Automatically using Hunter IO to determine best Prefix")
             url = "https://api.hunter.io/v2/domain-search?domain=%s&api_key=%s" % (suffix, api_key)
-            r = requests.get(url)
+            r = requests.get(url, verify=ssl_check)
             content = json.loads(r.text)
             if "status" in content:
                 print("[!] Rate limited by Hunter IO Key")
