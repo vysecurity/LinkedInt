@@ -326,7 +326,7 @@ def authenticate():
     		sys.exit("[!] Unable to login to LinkedIn.com")
     	print("[*] Obtained new session")
     	cookies = dict(li_at=session)
-    except Exception:
+    except Exception as e:
         sys.exit("[!] Could not authenticate to linkedin. %s" % e)
     return cookies
 
