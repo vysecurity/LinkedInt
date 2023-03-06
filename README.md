@@ -4,27 +4,28 @@
 
 # Sponsor Open Source Tooling
 
-* Feel free to sponsor me for maintaining the tool: https://github.com/sponsors/vysecurity
+- Feel free to sponsor me for maintaining the tool: https://github.com/sponsors/vysecurity
 
 # Disclaimer
 
-* The project is to be used for educational and testing purposes only.
+- The project is to be used for educational and testing purposes only.
 
 # Authors
 
-* LinkedInt by Vincent Yiu (@vysecurity): https://www.vincentyiu.com | https://vysecurity.rocks
-* Original Scraper by Danny Chrastil (@DisK0nn3cT): https://github.com/DisK0nn3cT/linkedin-gatherer
+- LinkedInt by Vincent Yiu (@vysecurity): https://www.vincentyiu.com | https://vysecurity.rocks
+- Original Scraper by Danny Chrastil (@DisK0nn3cT): https://github.com/DisK0nn3cT/linkedin-gatherer
 
 Contributors:
 
-* Leesoh
-* harshil-shah004
+- Leesoh
+- harshil-shah004
 
 # Installation
+
 ```
-git clone https://github.com/vysecurity/LinkedInt
-cd LinkedInt
-pip install -r requirements.txt
+git clone https://github.com/vysecurity/LinkedInt && cd LinkedInt
+pip install pipenv
+pipenv install
 ```
 
 # Change Log
@@ -32,31 +33,36 @@ pip install -r requirements.txt
 **[v1.1 01-05-2021]**
 
 Fixes:
-* Temporary fix for location field missing
+
+- Temporary fix for location field missing
 
 **[v1.1 27-03-2021]**
 
 Fixes:
-* Fixed the authentication flow
-* Fixed hunter API demo key - removed
+
+- Fixed the authentication flow
+- Fixed hunter API demo key - removed
 
 Additions:
-* Added better looking missing image value for the profiles with no photo.
-* Embedded all images into the HTML file to allow for offline viewing.
-* Added credits
+
+- Added better looking missing image value for the profiles with no photo.
+- Embedded all images into the HTML file to allow for offline viewing.
+- Added credits
 
 **[v0.1 BETA 12-07-2017]**
 
 Additions:
-* UI Updates
-* Constrain to company filters
-* Addition of Hunter for e-mail prediction
+
+- UI Updates
+- Constrain to company filters
+- Addition of Hunter for e-mail prediction
 
 # Usage
 
 1. Put in LinkedIn credentials in LinkedInt.cfg
 2. Put Hunter.io API key in LinkedInt.cfg
-3. Run LinkedInt.py and follow instructions (example below).
+3. Run `pipenv shell` to activate virtual environment
+4. Run `python LinkedInt.py` and follow instructions (example below).
 
 # Example
 
